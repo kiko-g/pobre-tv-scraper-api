@@ -2,12 +2,12 @@ import re
 import bs4
 import sys
 import requests
-from config import hdr
+from config import headers
 
 
 def scrape_tv_show(show_url):
     try:
-        mainHtml = requests.get(show_url, headers=hdr).text
+        mainHtml = requests.get(show_url, headers=headers).text
         mainDocument = bs4.BeautifulSoup(mainHtml, 'html.parser')
         seriesName = mainDocument.find('section').find('h1').text
 
@@ -27,7 +27,8 @@ def scrape_tv_show(show_url):
                     "name": episodeHtml.text.strip(),
                     "image": re.search('url\\((.*)\\)', episodeHtml.find(class_="img")['style']).group(1)
                 })
-            seasons.append(episodes)
+            if len(episodes) > 0:
+                seasons.append(episodes)
 
         return seriesName, seasons
 
@@ -36,12 +37,11 @@ def scrape_tv_show(show_url):
 
 
 if __name__ == '__main__':
-    show_url = 'https://www3.pobre.wtf/tvshows/tt1190634'
+    show_url = 'https://www3.pobre.wtf/tvshows/tt4574334'
     seriesName, seasons = scrape_tv_show(show_url)
 
     print(seriesName)
     for season in seasons:
-        if len(season) > 0:
-            print("---------------------------")
+        print("---------------------------")
         for episode in season:
             print(episode)
