@@ -2,13 +2,23 @@ import re
 import bs4
 import sys
 import requests
+import aiohttp
+import asyncio
 from config import headers
+from logger import log_tv_show
 
 
-def scrape_tv_show(show_url):
+async def get_html(show_url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(show_url) as resp:
+            html = await resp.text()
+    return html
+
+
+async def scrape_tv_show(show_url):
     try:
-        mainHtml = requests.get(show_url, headers=headers).text
-        mainDocument = bs4.BeautifulSoup(mainHtml, 'html.parser')
+        show_html = await get_html(show_url)
+        mainDocument = bs4.BeautifulSoup(show_html, 'html.parser')
         seriesName = mainDocument.find('section').find('h1').text
 
         htmlTarget = mainDocument.find(id='seasonsList')
@@ -37,11 +47,7 @@ def scrape_tv_show(show_url):
 
 
 if __name__ == '__main__':
-    show_url = 'https://www3.pobre.wtf/tvshows/tt4574334'
-    seriesName, seasons = scrape_tv_show(show_url)
+    show_url = 'https://www3.pobre.wtf/tvshows/tt11198330'
+    seriesName, seasons = asyncio.run(scrape_tv_show(show_url))
 
-    print(seriesName)
-    for season in seasons:
-        print("---------------------------")
-        for episode in season:
-            print(episode)
+    log_tv_show(seriesName, seasons)
